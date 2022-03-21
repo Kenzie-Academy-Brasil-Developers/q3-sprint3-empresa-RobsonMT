@@ -1,28 +1,8 @@
-# mock = [
-#     {
-#         "nome": "Roberto",
-#         "sobrenome": "Santiago",
-#         "cpf": "123",
-#         "salario": 3000,
-#         "nome_completo": "Roberto Santiago",
-#     },
-#     {
-#         "nome": "Robson",
-#         "sobrenome": "Martins",
-#         "cpf": "555",
-#         "salario": 2000,
-#         "nome_completo": "Robson Martins",
-#     },
-# ]
-
-
 class Funcionario(object):
 
     funcao = "Funcionario"
 
-    def __init__(
-        self, nome: str, sobrenome: str, cpf: str, salario: int = 3000
-    ) -> None:
+    def __init__(self, nome:str, sobrenome:str, cpf:str, salario:int = 3000)-> None:
         self.nome = nome.strip().capitalize()
         self.sobrenome = " ".join(sobrenome.split()).title()
         self.cpf = cpf
@@ -37,13 +17,13 @@ class Funcionario(object):
 
 
 class Empresa(object):
-    def __init__(self, nome: str, cnpj: str) -> None:
+    def __init__(self, nome:str, cnpj:str)-> None:
         self.nome = " ".join(nome.strip().split()).title()
         self.cnpj = str(cnpj)
-        self.contratados = list()
+        self.contratados:list = []
         
     
-    def contratar_funcionario(self, funcionario) -> str:
+    def contratar_funcionario(self, funcionario:"Funcionario" or "Gerente")-> str:
         if funcionario in self.contratados:
             return "Funcionário com esse CPF já foi contratado."
 
@@ -57,8 +37,8 @@ class Empresa(object):
         return "Funcionário contratado!"
         
     @staticmethod
-    def adicionar_funcionario_para_gerente(gerente, funcionario):
-        if not type(gerente) == Gerente or not type(funcionario) == Funcionario:
+    def adicionar_funcionario_para_gerente(gerente:"Gerente", funcionario:"Funcionario")-> bool or str:
+        if not gerente.__class__ == Gerente or not funcionario.__class__ == Funcionario:
             return False
 
         if funcionario in gerente.funcionarios:
@@ -67,22 +47,22 @@ class Empresa(object):
         gerente.funcionarios.append(funcionario)
         return 'Funcionário adicionado à lista do gerente!'
     
-    def demissao(self, funcionario):
+    def demissao(self, funcionario:"Funcionario" or "Gerente")-> str:
         self.contratados.remove(funcionario)
 
-        if type(funcionario) is Gerente:
+        if funcionario.__class__ is Gerente:
             return "Gerente demitido!"
 
-        for x in self.contratados:
-            if x.funcao == "Gerente":
-                if funcionario in x.funcionarios:
-                    x.funcionarios.remove(funcionario)
+        for contratado in self.contratados:
+            if contratado.funcao == "Gerente":
+                if funcionario in contratado.funcionarios:
+                    contratado.funcionarios.remove(funcionario)
 
         return "Funcionário demitido!"
         
         
     @staticmethod
-    def promocao(empresa, funcionario):
+    def promocao(empresa:"Empresa", funcionario:"Funcionario")-> bool:
         if funcionario.__class__ != Funcionario or funcionario not in empresa.contratados:
             return False
 
@@ -99,34 +79,39 @@ class Empresa(object):
     def __repr__(self):
         return f'<Empresa: {self.nome}>'
 
+    def __getattribute__(self, item):
+        return super(Empresa, self).__getattribute__(item)
+
+    def __getattr__(self, item):
+        return super(Empresa, self).__setattr__(item, "este atributo não existe na classe")
+
 
 class Gerente(Funcionario):
 
     funcao = "Gerente"
 
-    def __init__(
-        self,
-        nome: str,
-        sobrenome: str,
-        cpf: str,
-    ) -> None:
+    def __init__(self, nome:str, sobrenome:str, cpf:str)->None:
         super().__init__(nome, sobrenome, cpf, 8000)
-        self.funcionarios = list()
+        self.funcionarios: list = []
 
-    def aumento_salarial(self, funcionario, empresa):
-        if (
-            not funcionario.__class__ is Funcionario
-            or not funcionario in self.funcionarios
-        ):
+    def aumento_salarial(self, funcionario: "Funcionario", empresa : "Empresa")-> bool:
+        if ( not funcionario.__class__ == Funcionario or not funcionario in self.funcionarios):
             return False
-        aumento = int(funcionario.salario + (funcionario.salario / 10))
+
+        aumento = int(funcionario.salario + (funcionario.salario * 0.10))
 
         if aumento > 8000:
             empresa.promocao(empresa, funcionario)
 
-        else:
+        else: 
             funcionario.salario = aumento
 
         return True
+    
+    def __repr__(self):
+        return f"<Gerente: {self.nome_completo}>"
+
+    def __str__(self):
+        return f"<Gerente: {self.nome_completo}>"
 
 
